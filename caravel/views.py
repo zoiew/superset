@@ -1109,7 +1109,10 @@ class Caravel(BaseCaravelView):
                 role.permissions.append(view_menu_perm)
                 granted_perms.add(view_menu_perm.name)
         db.session.commit()
-        return Response(status=201, json=json.dumps(granted_perms))
+        return Response(status=201, json=json.dumps({
+            'granted': granted_perms,
+            'requested': db_ds_names
+        }))
 
     @log_this
     @has_access
