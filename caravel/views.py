@@ -1087,8 +1087,10 @@ class Caravel(BaseCaravelView):
         for dbs in databases:
             for schema in dbs['schema']:
                 for ds_name in schema['datasources']:
-                    db_ds_names.add(utils.get_datasource_full_name(
-                        dbs['name'], ds_name, schema=schema['name']))
+                    fullname = utils.get_datasource_full_name(
+                        dbs['name'], ds_name, schema=schema['name'])
+                    db_ds_names.add(fullname)
+                    logging.info('Granting riggts to: {}'.format(fullname))
 
         existing_datasources = SourceRegistry.get_all_datasources(db.session)
         datasources = [
@@ -1098,14 +1100,16 @@ class Caravel(BaseCaravelView):
         # remove all permissions
         role.permissions = []
         # grant permissions to the list of datasources
-        for ds_name in datasources:
-            role.permissions.append(
-                sm.find_permission_view_menu(
-                    view_menu_name=ds_name.perm,
+        granted_perms = []
+        for datasource in datasources:
+            view_menu_perm = sm.find_permission_view_menu(
+                    view_menu_name=datasource.perm,
                     permission_name='datasource_access')
-            )
+            if view_menu_perm:
+                role.permissions.append(view_menu_perm)
+                granted_perms.add(view_menu_perm.name)
         db.session.commit()
-        return Response(status=201)
+        return Response(status=201, json=json.dumps(granted_perms))
 
     @log_this
     @has_access
