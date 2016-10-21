@@ -1060,7 +1060,6 @@ appbuilder.add_view_no_menu(R)
 
 class Caravel(BaseCaravelView):
     """The base views for Caravel!"""
-    @has_access
     @expose("/override_role_permissions/", methods=['POST'])
     def override_role_permissions(self):
         """Updates the role with the give datasource permissions.
@@ -1080,6 +1079,8 @@ class Caravel(BaseCaravelView):
         }
         """
         data = request.get_json(force=True)
+        logging.error("Testing ability to print the stuff out")
+        logging.error(data)
         role_name = data['role_name']
         databases = data['database']
 
@@ -1090,12 +1091,12 @@ class Caravel(BaseCaravelView):
                     fullname = utils.get_datasource_full_name(
                         dbs['name'], ds_name, schema=schema['name'])
                     db_ds_names.add(fullname)
-                    logging.info('Granting riggts to: {}'.format(fullname))
+                    print('Granting riggts to: {}'.format(fullname))
 
         existing_datasources = SourceRegistry.get_all_datasources(db.session)
         datasources = [
             d for d in existing_datasources if d.full_name in db_ds_names]
-
+        logging.error(role_name)
         role = sm.find_role(role_name)
         # remove all permissions
         role.permissions = []
@@ -1107,12 +1108,12 @@ class Caravel(BaseCaravelView):
                     permission_name='datasource_access')
             if view_menu_perm:
                 role.permissions.append(view_menu_perm)
-                granted_perms.add(view_menu_perm.name)
+                granted_perms.append(view_menu_perm.view_menu.name)
         db.session.commit()
-        return Response(status=201, json=json.dumps({
+        return Response(json.dumps({
             'granted': granted_perms,
-            'requested': db_ds_names
-        }))
+            'requested': list(db_ds_names)
+        }), status=201)
 
     @log_this
     @has_access
