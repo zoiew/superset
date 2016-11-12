@@ -1962,6 +1962,7 @@ class Superset(BaseSupersetView):
         return "nope"
 
     @has_access_api
+    @expose("/results/<key>/")
     @log_this
     def results(self, key):
         """Serves a key off of the results backend"""
@@ -1991,7 +1992,6 @@ class Superset(BaseSupersetView):
                 }),
                 status=410,
                 mimetype="application/json")
-
 
     @has_access_api
     @expose("/sql_json/", methods=['POST', 'GET'])
